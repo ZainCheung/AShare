@@ -9,18 +9,20 @@ module.exports = class {
     async login(refresh_token) {
         try {
             if (!refresh_token) {
-                let s = await superagent.post('https://websv.aliyundrive.com/token/refresh')
+                let s = await superagent.post('https://auth.aliyundrive.com/v2/account/token')
                     .send({
-                        refresh_token: this.info.refresh_token
-                    })
+                        refresh_token: this.info.refresh_token,
+                        grant_type: "refresh_token"
+                    });
 
                 this.info = db('account').find({ id: this.info.id }).assign(s.body).write();
                 return this.info
             } else {
-                let s = await superagent.post('https://websv.aliyundrive.com/token/refresh')
+                let s = await superagent.post('https://auth.aliyundrive.com/v2/account/token')
                     .send({
-                        refresh_token: refresh_token
-                    })
+                        refresh_token: refresh_token,
+                        grant_type: "refresh_token"
+                    });
                 let info = db('account').find({ user_id: s.body.user_id }).value()
                 if (!info) {
                     info = db('account').insert(s.body).write()
@@ -69,7 +71,7 @@ module.exports = class {
     }
 
     // 列出文件
-    async list(parent_file_id = 'root', limit = 1000, order_by = 'name', order_direction = 'ASC', marker = null, list = []) {
+    async list(parent_file_id = 'root', limit = 200, order_by = 'name', order_direction = 'ASC', marker = null, list = []) {
         let s = await this.http('https://api.aliyundrive.com/v2/file/list', {
             drive_id: this.info.default_drive_id,
             fields: "*",
